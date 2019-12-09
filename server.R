@@ -4,8 +4,6 @@
 #                     Jerzy Bednarski                     #
 #                        Project                          #
 ###########################################################
-
-
 library(xts)
 library(ggplot2)
 library(dplyr)
@@ -17,12 +15,31 @@ library(tibble)
 library(plotly)
 library(gganimate)
 library(ggthemes)
-
+library("rnaturalearth")
+library("sf")
+library(countrycode)
 #data <- prepare_data()
 
 #setwd("C:\\Users\\jakub\\Desktop\\WNE_Data_Science\\RVisualisations\\project")
 
 data<-read.csv("my_data_new.csv")
+world <- ne_countries(scale = "medium", returnclass = "sf")
+DATA <-fread("my_data_new.csv")
+cc <- countrycode::codelist
+
+countries <- unique(DATA$country)
+mapping <- data.table(countries,iso = countrycode::codelist$iso3c[match(countries,countrycode::codelist$country.name.en)])
+
+country = c("Czech Republic", "Russian Federation", "Korea, Rep.", "Egypt, Arab Rep.", "Congo, Rep.","Venezule" )
+iso = c("CZE", "RUS", "KOR", "EGY", "COG", "VEN")
+
+manual_mapping <- data.table(countries = country, iso)
+mapping <- rbind(mapping[!is.na(iso),], manual_mapping)
+mapping[,country:= countries]
+mapping[,countries:=NULL]
+DATA <- merge(DATA,mapping, by= "country" , all.x = T)
+rm(mapping, country, iso, countries)
+
 
 # Definicja logiki serwera
 
@@ -193,13 +210,37 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
       
       wykres_scatter <- ggplot(data = wybraneDaneScatter(), aes(x = statystyka_x, y = statystyka, col = country, shape = continent)) 
       wykres_scatter <- wykres_scatter +
-        geom_point(aes(frame = year)) 
+        geom_point(aes(frame = year)) #+
+        # xlab(input$statystyka2_x) +
+        # ylab(input$statystyka2)
       #wykres_scatter <- ggplotly(wykres_scatter)
       # co ma zwrócić nasz eventReactive
       return(wykres_scatter)
       
     }) # koniec eventReactive
   
+  # mapy
+  
+  wykresMapa <- eventReactive(
+    eventExpr = input$show_map,
+    valueExpr = {
+      subset <- DATA[year == input$map_year,.(iso, gdp, gini, hdi, pollution, urban)]
+      
+      world_isos <- as.data.table(world[,c('name','iso_a3')])
+      
+      dt <- merge(world_isos[!is.na(iso_a3),], subset, by.x = 'iso_a3', by.y = 'iso', all.x = T)
+      dt <- rbind(dt,world_isos[is.na(iso_a3)], fill =T)
+      dt <- st_sf(dt)
+      
+      ggplot(data = dt) +
+        geom_sf(aes(fill = get(input$map_stat))) +
+        scale_fill_viridis_c(option = input$map_color) +
+        guides(fill = guide_legend(title = input$map_stat))
+    }
+    
+  )
+  
+
   
   # renderujemy wykresy jako elementy w output
   # NOWE! wykres w plotly renderujemy za pomocą renderPlotly!!!!
@@ -211,7 +252,7 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
   
   #output$wykres_density <- renderPlotly(ggplotly(wykresik_density()))
   
-  
+  output$mapa <- renderPlot(wykresMapa())
   # Zapisanie danych do pliku csv
   
   output$zapiszDaneCSV <- downloadHandler(

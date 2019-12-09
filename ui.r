@@ -2,6 +2,7 @@
 #                           USER INTERFACE                                #
 #-------------------------------------------------------------------------#
 
+
 library(RColorBrewer) # dla palet kolorów
 library(shinyWidgets) # dla prettyCheckbox()
 library(shinydashboard) 
@@ -178,6 +179,40 @@ tabPanel(title = "Comparison animation",
              ) # koniec mainPanel
            
          ) # koniec sidebarLayout
-         ) # koniec tabPanel "Wykresy"
-
-) # koniec navbarPage
+         )# koniec tabPanel "Wykresy"
+,
+tabPanel(title = "Maps",
+         # Sidebar layout with input and output definitions
+         sidebarLayout(
+           sidebarPanel(
+             width = 3,
+             tags$style(type="text/css", "body {padding-top: 70px;}"),
+             radioButtons(inputId = "map_stat", 
+                          label = "Select statistics:",  
+                          choices = c("Gross Domestic Product" = "gdp",
+                                      "Gini Index" = "gini",
+                                      "Human Development Index" = "hdi",
+                                      "Pollution" = "pollution",
+                                      "Urban percentage" = "urban"),
+                          selected = "gdp"
+             ),
+             selectInput(inputId = "map_year", 
+                         label = "Select year:",
+                         choices = unique(sort(data$year)),
+                         multiple = FALSE
+             ),
+             selectInput(inputId = "map_color", 
+                         label = "Select color:",
+                         choices = c("magma","inferno","plasma","viridis","cividis"),
+                         multiple = FALSE
+             ),
+             actionButton(inputId = "show_map",
+                          label = "SELECT"
+                          )
+             ),
+           mainPanel( 
+            plotOutput("mapa")
+                    )
+          )
+) 
+)# koniec navbarPage
