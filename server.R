@@ -237,10 +237,20 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
         scale_fill_viridis_c(option = input$map_color) +
         guides(fill = guide_legend(title = input$map_stat))
     }
-    
   )
   
-
+  
+  wykresBar <- eventReactive(
+    eventExpr = input$show_bar,
+    valueExpr = {
+      DATA[eval(bquote(year == .(as.numeric(input$bar_year)) &
+                         .(as.name(input$bar_stat)) >= quantile(.(as.name(input$bar_stat)), .(input$bar_slider[1]/100), na.rm = T) &
+                         .(as.name(input$bar_stat)) <= quantile(.(as.name(input$bar_stat)), .(input$bar_slider[2]/100), na.rm = T))),]  %>%
+        ggplot() +
+        geom_bar(aes(x = continent, fill = continent)) +
+        theme(axis.text.x = element_blank())
+    }
+  )
   
   # renderujemy wykresy jako elementy w output
   # NOWE! wykres w plotly renderujemy za pomocą renderPlotly!!!!
@@ -254,6 +264,8 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
   
   output$mapa <- renderPlot(wykresMapa())
   # Zapisanie danych do pliku csv
+  output$continent_bar <- renderPlot(wykresBar())
+  
   
   output$zapiszDaneCSV <- downloadHandler(
     
@@ -263,7 +275,6 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
     filename = function() paste0("Wykres_", input$kraj, ".csv"),
     
     # podajemy zawartość jako funkcję
-    
     content = function(file) {
       write.csv(data.frame(wybraneDane()),  # zapisujemy wybrane dane
                 # konwertując obiekt xts na data.frame
@@ -273,11 +284,7 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
                 )
       }
     ) # koniec downloadHandler
-  
   # data.table renderowany za pomocą renderDatatable()
-  
   output$tabelaDanych <- renderDataTable(data.frame(wybraneDane()) %>% 
                                            select(-country))
-  
-  
 } # koniec definicji server

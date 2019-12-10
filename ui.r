@@ -214,5 +214,38 @@ tabPanel(title = "Maps",
             plotOutput("mapa")
                     )
           )
-) 
+) ,
+tabPanel(title = "Continents",
+         sidebarLayout(
+           sidebarPanel(
+             width = 3,
+             tags$style(type="text/css", "body {padding-top: 70px;}"),
+             radioButtons(inputId = "bar_stat", 
+                          label = "Select statistics:",  
+                          choices = c("Gross Domestic Product" = "gdp",
+                                      "Gini Index" = "gini",
+                                      "Human Development Index" = "hdi",
+                                      "Pollution" = "pollution",
+                                      "Urban percentage" = "urban"),
+                          selected = "gdp"
+             ),
+             selectInput(inputId = "bar_year", 
+                         label = "Select year:",
+                         choices = unique(sort(data$year)),
+                         multiple = FALSE
+             ),
+             sliderInput("bar_slider", 
+                         label = "Select range:", 
+                         min = 0, 
+                         max = 100, 
+                         value = c(0, 100)),
+             actionButton(inputId = "show_bar",
+                          label = "SELECT"
+             )
+           ),
+           mainPanel( 
+            plotOutput("continent_bar")
+           )
+         )
+)
 )# koniec navbarPage
