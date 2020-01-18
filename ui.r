@@ -1,10 +1,15 @@
 #-------------------------------------------------------------------------#
 #                           USER INTERFACE                                #
 #-------------------------------------------------------------------------#
+<<<<<<< HEAD
 list.of.packages <- c("RColorBrewer","data.table","DT","shinythemes","shinyWidgets", "shinydashboard","plotly")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 library(readr)
+=======
+
+
+>>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
 library(RColorBrewer) # dla palet kolorów
 library(shinyWidgets) # dla prettyCheckbox()
 library(shinydashboard) 
@@ -181,6 +186,7 @@ tabPanel(title = "Comparison animation",
              ) # koniec mainPanel
            
          ) # koniec sidebarLayout
+<<<<<<< HEAD
          ), # koniec tabPanel "Wykresy"
 
 tabPanel(title = "TreeMap",
@@ -250,6 +256,10 @@ tabPanel(title = "TreeMap",
          ) # koniec sidebarLayout
 ), # koniec tabPanel "TreeMap"
 
+=======
+         )# koniec tabPanel "Wykresy"
+,
+>>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
 tabPanel(title = "Maps",
          # Sidebar layout with input and output definitions
          sidebarLayout(
@@ -262,8 +272,12 @@ tabPanel(title = "Maps",
                                       "Gini Index" = "gini",
                                       "Human Development Index" = "hdi",
                                       "Pollution" = "pollution",
+<<<<<<< HEAD
                                       "Urban percentage" = "urban"
                                       ),
+=======
+                                      "Urban percentage" = "urban"),
+>>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
                           selected = "gdp"
              ),
              selectInput(inputId = "map_year", 
@@ -278,6 +292,7 @@ tabPanel(title = "Maps",
              ),
              actionButton(inputId = "show_map",
                           label = "SELECT"
+<<<<<<< HEAD
              )
            ),
            mainPanel( 
@@ -286,6 +301,15 @@ tabPanel(title = "Maps",
          )
 ) , # koniec tabPanel "Maps"
 
+=======
+                          )
+             ),
+           mainPanel( 
+            plotOutput("mapa")
+                    )
+          )
+) ,
+>>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
 tabPanel(title = "Continents",
          sidebarLayout(
            sidebarPanel(
@@ -297,8 +321,12 @@ tabPanel(title = "Continents",
                                       "Gini Index" = "gini",
                                       "Human Development Index" = "hdi",
                                       "Pollution" = "pollution",
+<<<<<<< HEAD
                                       "Urban percentage" = "urban"
                                       ),
+=======
+                                      "Urban percentage" = "urban"),
+>>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
                           selected = "gdp"
              ),
              selectInput(inputId = "bar_year", 
@@ -316,9 +344,17 @@ tabPanel(title = "Continents",
              )
            ),
            mainPanel( 
+<<<<<<< HEAD
              plotOutput("continent_bar")
            )
          )
 ) # koniec tabPanel "Continents"
 
 ) # koniec navbarPage
+=======
+            plotOutput("continent_bar")
+           )
+         )
+)
+)# koniec navbarPage
+>>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
