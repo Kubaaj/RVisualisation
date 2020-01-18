@@ -5,10 +5,8 @@
 #                        Project                          #
 ###########################################################
 
-list.of.packages <- c("ggplot2","dplyr","colourpicker","RColorBrewer","data.table","DT","tibble","plotly","gganimate","ggthemes","rgeos","treemapify","treemap","rnaturalearth","sf","countrycode")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
 
+library(xts)
 library(ggplot2)
 library(dplyr)
 library(colourpicker) 
@@ -21,35 +19,14 @@ library(gganimate)
 library(ggthemes)
 library(treemapify)
 library(treemap)
-library(rnaturalearth)
-library(sf)
-library(countrycode)
-library(rgeos)
 
 #data <- prepare_data()
 
-setwd("C:\\Users\\jakub\\Desktop\\WNE_Data_Science\\RVisualisations\\project")
+#setwd("C:\\Users\\jakub\\Desktop\\WNE_Data_Science\\RVisualisations\\project")
 
-data<-read_csv("my_data_new.csv")
-world <- ne_countries(scale = "medium", returnclass = "sf")
-DATA <-fread("my_data_new.csv")
-cc <- countrycode::codelist
-
-countries <- unique(DATA$country)
-mapping <- data.table(countries,iso = countrycode::codelist$iso3c[match(countries,countrycode::codelist$country.name.en)])
-
-country = c("Czech Republic", "Russian Federation", "Korea, Rep.", "Egypt, Arab Rep.", "Congo, Rep.","Venezule" )
-iso = c("CZE", "RUS", "KOR", "EGY", "COG", "VEN")
-
-manual_mapping <- data.table(countries = country, iso)
-mapping <- rbind(mapping[!is.na(iso),], manual_mapping)
-mapping[,country:= countries]
-mapping[,countries:=NULL]
-DATA <- merge(DATA,mapping, by= "country" , all.x = T)
-rm(mapping, country, iso, countries)
+data<-read.csv("my_data_new.csv")
 
 # Definicja logiki serwera
-
 server <- function(input,    # zawiera elementy zdefiniowane w części ui
                    output) { # zawiera elementy generowane w części server,
                              # które będą wyświetlane w głównym panelu (mainPanel)
@@ -87,7 +64,10 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
   wybraneDane <- eventReactive(
     eventExpr = input$pokaz_wykres,
     valueExpr = { 
-      # pobieramy dane                        
+      # pobieramy dane    
+      
+      print(input$kraj)
+      
       dane_wybrane <- data %>% 
         filter(country == input$kraj) %>% 
         filter(year >= input$przedzial_dat[[1]]) %>% 
@@ -105,8 +85,7 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
       } else if (input$statystyka == "urban") {
         dane_wybrane$statystyka <- dane_wybrane$urban
       }
-      
-      
+      print("TEST2")
       return(dane_wybrane)
       
     }) # koniec eventReactive
@@ -149,14 +128,12 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
       } else if (input$theme == "solarized") {
         wykres <- wykres + theme_solarized() + scale_colour_solarized() + theme(legend.position = "none")
       }
-
+      print("TEST")
       wykresLiniowy = wykres
       # co ma zwrócić nasz eventReactive
-      return(wykresLiniowy)
+      retusrn(wykresLiniowy)
       
     }) # koniec eventReactive
-  
-  ############### 2 ###############
   
   output$przedzial_dat2 <- renderUI({
     
@@ -179,22 +156,11 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
     eventExpr = input$show_graph_scatter,
     valueExpr = { 
       # pobieramy dane                        
-      if (input$isanimation == "yes") {
-        dane_wybrane2 <- data %>% 
+      dane_wybrane2 <- data %>% 
         filter(country %in% input$kraj2) %>% 
         filter(year >= input$przedzial_dat2[[1]]) %>% 
         filter(year <= input$przedzial_dat2[[2]])
-      } else if (input$country_region_continent == "country"){
-        dane_wybrane2 <- data %>% 
-          filter(country %in% input$kraj2) %>% 
-          filter(year == input$rok_scatter)
-      } else if (input$country_region_continent == "continent"){
-        dane_wybrane2 <- data %>% 
-          filter(year == input$rok_scatter)
-      } else if (input$country_region_continent == "region"){
-        dane_wybrane2 <- data %>% 
-          filter(year == input$rok_scatter)
-      }
+      
       #dane_wybrane2$year <- as.Date(dane_wybrane2$year)
       
       if (input$statystyka2 == "gdp") {
@@ -228,52 +194,18 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
   wykresPunktowy <- eventReactive(
     eventExpr = input$show_graph_scatter,
     valueExpr = {
-      if (input$isanimation == "yes") {
+      
       wykres_scatter <- ggplot(data = wybraneDaneScatter(), aes(x = statystyka_x, y = statystyka, col = country, shape = continent)) 
       wykres_scatter <- wykres_scatter +
-        geom_point(aes(frame = year)) + 
-        xlab(input$statystyka2_x) + 
-        ylab(input$statystyka2)
+        geom_point(aes(frame = year)) 
       #wykres_scatter <- ggplotly(wykres_scatter)
       # co ma zwrócić nasz eventReactive
-      return(wykres_scatter) }
-      
-    }) # koniec eventReactive
-  
-  wykresPunktowyNoAnim <- eventReactive(
-    eventExpr = input$show_graph_scatter,
-    valueExpr = {
-      if (input$isanimation == "no") {
-        
-      if(input$country_region_continent == "country"){
-        wykres_scatter_no_anim <- ggplot(data = wybraneDaneScatter(), aes(x = statystyka_x,y=statystyka,label=country,col=continent,shape=region))
-      } else if (input$country_region_continent == "continent"){
-        xD = wybraneDaneScatter()
-        xD <- xD %>% group_by(continent) %>% 
-          summarise(statystyka_x = mean(statystyka_x, na.rm=TRUE), statystyka = mean(statystyka, na.rm=TRUE))
-        wykres_scatter_no_anim <- ggplot(data = xD , aes(x = statystyka_x, y = statystyka, col = continent))
-      } else if (input$country_region_continent == "region"){
-        xD = wybraneDaneScatter()
-        xD <- xD %>% group_by(region) %>% 
-          summarise(statystyka_x = mean(statystyka_x, na.rm=TRUE), statystyka = mean(statystyka, na.rm=TRUE))
-        wykres_scatter_no_anim <- ggplot(data = xD , aes(x = statystyka_x, y = statystyka, col = region))
-      }
-
-        
-      wykres_scatter_no_anim <- wykres_scatter_no_anim +
-        geom_point() + 
-        xlab(input$statystyka2_x) + 
-        ylab(input$statystyka2)
-      
-      # co ma zwrócić nasz eventReactive
-      return(wykres_scatter_no_anim)}
+      return(wykres_scatter)
       
     }) # koniec eventReactive
   
   
-  
-  
-  ############### 3 ###############
+  # potem generujemy po kliknięciu dane dla wybranego zakresu dat
   
   wybraneDaneTreeMap <- eventReactive(
     eventExpr = input$show_treemap,
@@ -284,138 +216,48 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
       
       
       if (input$statystyka_tm == "gdp") {
-        dane_wybrane_tm$statystyka <- dane_wybrane_tm$gdp
+        dane_wybrane_tm$statystyka <- dane_wybrane$gdp
       } else if (input$statystyka_tm == "gini") {
-        dane_wybrane_tm$statystyka <- dane_wybrane_tm$gini
+        dane_wybrane_tm$statystyka <- dane_wybrane$gini
       } else if (input$statystyka_tm == "hdi") {
-        dane_wybrane_tm$statystyka <- dane_wybrane_tm$hdi
+        dane_wybrane_tm$statystyka <- dane_wybrane$hdi
       } else if (input$statystyka_tm == "pollution") {
-        dane_wybrane_tm$statystyka <- dane_wybrane_tm$pollution
+        dane_wybrane_tm$statystyka <- dane_wybrane$pollution
       } else if (input$statystyka_tm == "urban") {
-        dane_wybrane_tm$statystyka <- dane_wybrane_tm$urban
+        dane_wybrane_tm$statystyka <- dane_wybrane$urban
       }
-      
-        if (input$statystyka_tm_2 == "gdp"){
-        dane_wybrane_tm$statystyka2 <- dane_wybrane_tm$gdp
-      } else if (input$statystyka_tm_2 == "gini") {
-        dane_wybrane_tm$statystyka2 <- dane_wybrane_tm$gini
-      } else if (input$statystyka_tm_2 == "hdi") {
-        dane_wybrane_tm$statystyka2 <- dane_wybrane_tm$hdi
-      } else if (input$statystyka_tm_2 == "pollution") {
-        dane_wybrane_tm$statystyka2 <- dane_wybrane_tm$pollution
-      } else if (input$statystyka_tm_2 == "urban") {
-        dane_wybrane_tm$statystyka2 <- dane_wybrane_tm$urban
-      }
+      print("TREEMAP2")
       return(dane_wybrane_tm)
       
     }) # koniec eventReactive
   
   
-  wykresTreeMapContinent <- eventReactive(
-    eventExpr = input$show_treemap,
-    valueExpr = {
-      wykres_tree_map <- ggplot(data = wybraneDaneTreeMap(), aes(area = statystyka, label = country, fill = continent)) 
-      wykresTreeMapContinent <- wykres_tree_map +
-        geom_treemap() +
-        geom_treemap_text(grow = T, reflow = T, place = "topleft", colour = "white") +
-        facet_wrap( ~continent)
-
-      if (input$theme_tm == "magma"){
-        wykresTreeMapContinent <- wykresTreeMapContinent + scale_fill_viridis_d(option = "magma", na.value = "grey50")
-      } else if (input$theme_tm == "inferno"){
-        wykresTreeMapContinent <- wykresTreeMapContinent + scale_fill_viridis_d(option = "inferno", na.value = "grey50")
-      } else if (input$theme_tm == "plasma"){
-        wykresTreeMapContinent <- wykresTreeMapContinent + scale_fill_viridis_d(option = "plasma", na.value = "grey50")
-      } else if (input$theme_tm == "viridis"){
-        wykresTreeMapContinent <- wykresTreeMapContinent + scale_fill_viridis_d(option = "viridis", na.value = "grey50")
-      } else if (input$theme_tm == "cividis"){
-        wykresTreeMapContinent <- wykresTreeMapContinent + scale_fill_viridis_d(option = "cividis", na.value = "grey50")
-      }
-        
-      return(wykresTreeMapContinent)
-      
-    }) # koniec eventReactive
-  
   wykresTreeMap <- eventReactive(
     eventExpr = input$show_treemap,
     valueExpr = {
-      wykres_tree_map2 <- ggplot(data = wybraneDaneTreeMap(), aes(area = statystyka, label = country, fill = statystyka2)) 
-      wykresTreeMap <- wykres_tree_map2 +
-        geom_treemap() +
-        geom_treemap_text(grow = T, reflow = T, place = "topleft", colour = "white") + 
-        labs(fill = input$statystyka_tm_2)
-  
-      if (input$theme_tm == "magma"){
-        wykresTreeMap <- wykresTreeMap + scale_fill_viridis_c(option = "magma", na.value = "grey50")
-      } else if (input$theme_tm == "inferno"){
-        wykresTreeMap <- wykresTreeMap + scale_fill_viridis_c(option = "inferno", na.value = "grey50")
-      } else if (input$theme_tm == "plasma"){
-        wykresTreeMap <- wykresTreeMap + scale_fill_viridis_c(option = "plasma", na.value = "grey50")
-      } else if (input$theme_tm == "viridis"){
-        wykresTreeMap <- wykresTreeMap + scale_fill_viridis_c(option = "viridis", na.value = "grey50")
-      } else if (input$theme_tm == "cividis"){
-        wykresTreeMap <- wykresTreeMap + scale_fill_viridis_c(option = "cividis", na.value = "grey50")
-      }
-      return(wykresTreeMap)
+      
+      wykres_tree_map <- ggplot(data = wybraneDaneTreeMap(), aes(area = country, fill = statystyka)) 
+      wykres_tree_map <- wykres_tree_map +
+        geom_treemap() 
+      #wykres_scatter <- ggplotly(wykres_scatter)
+      # co ma zwrócić nasz eventReactive
+      print("TREEMAP")
+      return(wykres_tree_map)
       
     }) # koniec eventReactive
-  
-  
-  ############### 4 ###############
-  
-  wykresMapa <- eventReactive(
-    eventExpr = input$show_map,
-    valueExpr = {
-      subset <- DATA[year == input$map_year,.(iso, gdp, gini, hdi, pollution, urban)]
-      
-      world_isos <- as.data.table(world[,c('name','iso_a3')])
-      
-      dt <- merge(world_isos[!is.na(iso_a3),], subset, by.x = 'iso_a3', by.y = 'iso', all.x = T)
-      dt <- rbind(dt,world_isos[is.na(iso_a3)], fill =T)
-      dt <- st_sf(dt)
-      
-      ggplot(data = dt) +
-        geom_sf(aes(fill = get(input$map_stat))) +
-        scale_fill_viridis_c(option = input$map_color) +
-        guides(fill = guide_legend(title = input$map_stat))
-    }
-  )
-  
-  ############### 5 ###############
-  
-  wykresBar <- eventReactive(
-    eventExpr = input$show_bar,
-    valueExpr = {
-      DATA[eval(bquote(year == .(as.numeric(input$bar_year)) &
-                         .(as.name(input$bar_stat)) >= quantile(.(as.name(input$bar_stat)), .(input$bar_slider[1]/100), na.rm = T) &
-                         .(as.name(input$bar_stat)) <= quantile(.(as.name(input$bar_stat)), .(input$bar_slider[2]/100), na.rm = T))),]  %>%
-        ggplot() +
-        geom_bar(aes(x = continent, fill = continent)) +
-        theme(axis.text.x = element_blank())
-    }
-  )
-  
-  ##############################################
   
   
   # renderujemy wykresy jako elementy w output
   # NOWE! wykres w plotly renderujemy za pomocą renderPlotly!!!!
-  ### 1 ###
   output$wykresLiniowy <- renderPlot(wykresLiniowy())
   
-  ### 2 ###
   output$wykresPunktowy <- renderPlotly(ggplotly(wykresPunktowy()))
-  output$wykresPunktowyNoAnim <- renderPlotly(ggplotly(wykresPunktowyNoAnim()))
-
-  ### 3 ###
-  output$wykresTreeMapContinent <- renderPlot(wykresTreeMapContinent())
+  
+  #output$wykres_boxplot <- renderPlotly(ggplotly(wykresik_boxplot()))
+  
+  #output$wykres_density <- renderPlotly(ggplotly(wykresik_density()))
+  
   output$wykresTreeMap <- renderPlot(wykresTreeMap())
-  
-  ### 4 ###
-  output$mapa <- renderPlot(wykresMapa())
-  
-  ### 5 ###
-  output$continent_bar <- renderPlot(wykresBar())
   
   # Zapisanie danych do pliku csv
   
@@ -430,8 +272,6 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
     
     content = function(file) {
       write.csv(data.frame(wybraneDane()),  # zapisujemy wybrane dane
-                # konwertując obiekt xts na data.frame
-                # wtedy daty będą zapisane jako nazwy wierszy
                 file, 
                 row.names = TRUE # dlatego zostawiamy nazwy wierszy 
                 )
