@@ -4,15 +4,11 @@
 #                     Jerzy Bednarski                     #
 #                        Project                          #
 ###########################################################
-<<<<<<< HEAD
 
 list.of.packages <- c("ggplot2","dplyr","colourpicker","RColorBrewer","data.table","DT","tibble","plotly","gganimate","ggthemes","rgeos","treemapify","treemap","rnaturalearth","sf","countrycode")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
-=======
-library(xts)
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
 library(ggplot2)
 library(dplyr)
 library(colourpicker) 
@@ -23,7 +19,6 @@ library(tibble)
 library(plotly)
 library(gganimate)
 library(ggthemes)
-<<<<<<< HEAD
 library(treemapify)
 library(treemap)
 library(rnaturalearth)
@@ -31,20 +26,11 @@ library(sf)
 library(countrycode)
 library(rgeos)
 
-=======
-library("rnaturalearth")
-library("sf")
-library(countrycode)
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
 #data <- prepare_data()
 
 setwd("C:\\Users\\jakub\\Desktop\\WNE_Data_Science\\RVisualisations\\project")
 
-<<<<<<< HEAD
 data<-read_csv("my_data_new.csv")
-=======
-data<-read.csv("my_data_new.csv")
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
 world <- ne_countries(scale = "medium", returnclass = "sf")
 DATA <-fread("my_data_new.csv")
 cc <- countrycode::codelist
@@ -61,10 +47,6 @@ mapping[,country:= countries]
 mapping[,countries:=NULL]
 DATA <- merge(DATA,mapping, by= "country" , all.x = T)
 rm(mapping, country, iso, countries)
-<<<<<<< HEAD
-=======
-
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
 
 # Definicja logiki serwera
 
@@ -249,22 +231,15 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
       if (input$isanimation == "yes") {
       wykres_scatter <- ggplot(data = wybraneDaneScatter(), aes(x = statystyka_x, y = statystyka, col = country, shape = continent)) 
       wykres_scatter <- wykres_scatter +
-<<<<<<< HEAD
         geom_point(aes(frame = year)) + 
         xlab(input$statystyka2_x) + 
         ylab(input$statystyka2)
-=======
-        geom_point(aes(frame = year)) #+
-        # xlab(input$statystyka2_x) +
-        # ylab(input$statystyka2)
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
       #wykres_scatter <- ggplotly(wykres_scatter)
       # co ma zwrócić nasz eventReactive
       return(wykres_scatter) }
       
     }) # koniec eventReactive
   
-<<<<<<< HEAD
   wykresPunktowyNoAnim <- eventReactive(
     eventExpr = input$show_graph_scatter,
     valueExpr = {
@@ -387,9 +362,6 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
   
   
   ############### 4 ###############
-=======
-  # mapy
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
   
   wykresMapa <- eventReactive(
     eventExpr = input$show_map,
@@ -409,10 +381,7 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
     }
   )
   
-<<<<<<< HEAD
   ############### 5 ###############
-=======
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
   
   wykresBar <- eventReactive(
     eventExpr = input$show_bar,
@@ -425,12 +394,9 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
         theme(axis.text.x = element_blank())
     }
   )
-<<<<<<< HEAD
   
   ##############################################
   
-=======
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
   
   # renderujemy wykresy jako elementy w output
   # NOWE! wykres w plotly renderujemy za pomocą renderPlotly!!!!
@@ -448,16 +414,10 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
   ### 4 ###
   output$mapa <- renderPlot(wykresMapa())
   
-<<<<<<< HEAD
   ### 5 ###
   output$continent_bar <- renderPlot(wykresBar())
   
-=======
-  output$mapa <- renderPlot(wykresMapa())
->>>>>>> cedb295d2f05a70157b8e05e6da42a26e2ae6f06
   # Zapisanie danych do pliku csv
-  output$continent_bar <- renderPlot(wykresBar())
-  
   
   output$zapiszDaneCSV <- downloadHandler(
     
@@ -467,6 +427,7 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
     filename = function() paste0("Wykres_", input$kraj, ".csv"),
     
     # podajemy zawartość jako funkcję
+    
     content = function(file) {
       write.csv(data.frame(wybraneDane()),  # zapisujemy wybrane dane
                 # konwertując obiekt xts na data.frame
@@ -476,7 +437,11 @@ server <- function(input,    # zawiera elementy zdefiniowane w części ui
                 )
       }
     ) # koniec downloadHandler
+  
   # data.table renderowany za pomocą renderDatatable()
+  
   output$tabelaDanych <- renderDataTable(data.frame(wybraneDane()) %>% 
                                            select(-country))
+  
+  
 } # koniec definicji server
